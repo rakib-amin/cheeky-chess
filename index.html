@@ -250,9 +250,18 @@
   .piece {
     position: relative;
     z-index: 2;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
     line-height: 1;
     transition: transform 0.25s ease;
+  }
+
+  .piece.white-piece {
+    color: #ffffff;
+    text-shadow: 0 1px 4px rgba(0,0,0,1), 0 0 3px rgba(0,0,0,0.9);
+  }
+
+  .piece.black-piece {
+    color: #1a1a1a;
+    text-shadow: 0 0 4px rgba(255,255,255,0.7), 0 1px 3px rgba(255,255,255,0.5);
   }
 
   /* MOVE LIST */
@@ -1195,11 +1204,11 @@ const LESSONS = [
       { from:'c8', to:'g4', san:'Bg4',  side:'b', desc:"Black pins the f3 knight against the queen! This is the key move that sets up White's trap.", highlight:['g4','f3','d1'], highlightType:'good' },
       { from:'b1', to:'c3', san:'Nc3',  side:'w', desc:"White develops another knight, reinforcing e4 and the center — and setting up the trick." },
       { from:'g7', to:'g6', san:'g6',   side:'b', desc:"Black plays a natural developing move, preparing to fianchetto the bishop maybe." },
-      { from:'c3', to:'e4', san:'Nxe5!', side:'w', desc:"White appears to blunder! The Nxe5 move 'ignores' the pin — if Black takes the queen with Bxd1, what happens?", highlight:['e5','d1','g4'], highlightType:'trap' },
+      { from:'f3', to:'e5', san:'Nxe5!', side:'w', desc:"White appears to blunder! The Nxe5 move 'ignores' the pin — if Black takes the queen with Bxd1, what happens?", highlight:['e5','d1','g4'], highlightType:'trap' },
       { from:'g4', to:'d1', san:'Bxd1??', side:'b', desc:"Black takes the queen — surely winning! But this is the losing move. White now demolishes Black with minor pieces.", highlight:['d1'], highlightType:'trap' },
       { from:'c4', to:'f7', san:'Bxf7+', side:'w', desc:"CHECK! The bishop forks king and rook on f7. The king must move.", highlight:['f7','e8'], highlightType:'trap' },
       { from:'e8', to:'e7', san:'Ke7',  side:'b', desc:"King moves to e7 — forced." },
-      { from:'e5', to:'d5', san:'Nd5#', side:'w', desc:"CHECKMATE! The knight delivers checkmate on d5. The Black king is trapped by its own pieces. White won with NO queen!", highlight:['d5','e7'], highlightType:'trap' }
+      { from:'c3', to:'d5', san:'Nd5#', side:'w', desc:"CHECKMATE! The knight delivers checkmate on d5. The Black king is trapped by its own pieces. White won with NO queen!", highlight:['d5','e7'], highlightType:'trap' }
     ],
     board: startBoard(),
     tips: [
@@ -1511,7 +1520,8 @@ function renderBoard(board, highlights, highlightType) {
       }
       cls += extraCls;
       const piece = board[rank][file];
-      const pieceHtml = piece ? `<span class="piece">${UNICODE[piece]}</span>` : '';
+      const pieceColorCls = piece ? (piece === piece.toUpperCase() ? 'white-piece' : 'black-piece') : '';
+      const pieceHtml = piece ? `<span class="piece ${pieceColorCls}">${UNICODE[piece]}</span>` : '';
       html += `<div class="${cls}" data-sq="${sqName}">${pieceHtml}</div>`;
     }
     html += '</div>';
@@ -2036,7 +2046,8 @@ function renderEvalBoard(flatBoard, activeColor) {
         extraCls = ' selectable';
       }
 
-      const pieceHtml = piece ? `<span class="piece">${UNICODE_FLAT[piece] || ''}</span>` : '';
+      const pieceCls = piece ? (piece[0] === 'w' ? 'white-piece' : 'black-piece') : '';
+      const pieceHtml = piece ? `<span class="piece ${pieceCls}">${UNICODE_FLAT[piece] || ''}</span>` : '';
       html += `<div class="${colorCls} square${extraCls}" data-sq="${sqName}" data-eval="true">${pieceHtml}</div>`;
     }
     html += '</div>';
