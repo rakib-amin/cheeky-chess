@@ -1284,7 +1284,7 @@ const LESSONS = [
     moves: [
       { from:'b5', to:'b5', san:'(position set)', side:'w', desc:"Study the position. The White bishop on b5 PINS the Black knight on c6. The knight cannot legally move because it would expose the Black king on e8 to check!", highlight:['b5','c6','e8'], highlightType:'trap' },
       { from:'d1', to:'d5', san:'Qd5!', side:'w', desc:"White exploits the pin! The queen attacks the pinned knight on c6. Black cannot defend with the knight (it's pinned!)", highlight:['d5','c6'], highlightType:'trap' },
-      { from:'d8', to:'d7', san:'Qd7',  side:'b', desc:"Black tries to defend the knight with the queen, but..." },
+      { from:'d8', to:'b6', san:'Qb6',  side:'b', desc:"Black tries to defend the knight by bringing the queen to b6, covering c6 along the rank. But it's still not enough..." },
       { from:'d5', to:'c6', san:'Qxc6', side:'w', desc:"White captures the pinned knight! Black can recapture with Qxc6, but White has won a knight for free — the pin exploited a piece that couldn't move legally.", highlight:['c6'], highlightType:'good' }
     ],
     boardSetup: () => {
@@ -1295,6 +1295,7 @@ const LESSONS = [
       b[3][1] = 'B'; // b5
       b[7][4] = 'K'; // e1
       b[7][3] = 'Q'; // d1
+      b[1][3] = 'p'; // d7 pawn (blocks Black's queen from capturing Qxd5)
       b[1][4] = 'p'; // e7 pawn
       return b;
     },
