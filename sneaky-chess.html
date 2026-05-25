@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sneaky Chess Tricks</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c8ef5;
+    --accent2: #f5a623;
+    --danger: #e05252;
+    --success: #4caf87;
+    --text: #e8eaf6;
+    --text-muted: #8b91b5;
+    --light-sq: #d4c4a8;
+    --dark-sq: #7c5c3e;
+    --highlight-move: rgba(255, 210, 0, 0.55);
+    --highlight-trap: rgba(224, 82, 82, 0.55);
+    --highlight-good: rgba(76, 175, 135, 0.55);
+    --sidebar-w: 280px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  header h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header .subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  .hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 40;
+  }
+
+  .sidebar-inner { padding: 16px 0; }
+
+  .category-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 12px 20px 6px;
+  }
+
+  .lesson-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text);
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-family: inherit;
+    border-left: 3px solid transparent;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    line-height: 1.3;
+  }
+
+  .lesson-btn:hover { background: var(--surface2); }
+
+  .lesson-btn.active {
+    background: var(--surface2);
+    border-left-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lesson-btn .cat-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+  }
+
+  .tag-trap { background: #3d1c1c; color: var(--danger); }
+  .tag-tactic { background: #1c2e3d; color: var(--accent); }
+  .tag-mate { background: #1c3d28; color: var(--success); }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+  }
+
+  .lesson-header { margin-bottom: 20px; }
+
+  .lesson-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .lesson-desc {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 680px;
+  }
+
+  .sneaky-badge {
+    display: inline-block;
+    background: linear-gradient(90deg, #3d1c1c, #2e1c3d);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .board-section {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  /* CHESS BOARD */
+  .board-wrap {
+    flex-shrink: 0;
+  }
+
+  .board-container {
+    display: inline-flex;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  .board-row { display: flex; }
+
+  .rank-label {
+    width: 22px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .file-labels {
+    display: flex;
+    padding-left: 22px;
+  }
+
+  .file-label {
+    width: 60px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding-top: 4px;
+    font-weight: 500;
+  }
+
+  .square {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    line-height: 1;
+    position: relative;
+    transition: background 0.2s;
+    cursor: default;
+  }
+
+  .square.light { background: var(--light-sq); }
+  .square.dark  { background: var(--dark-sq); }
+  .square.hl-move { background: var(--highlight-move) !important; }
+  .square.hl-trap { background: var(--highlight-trap) !important; }
+  .square.hl-good { background: var(--highlight-good) !important; }
+
+  .piece {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    line-height: 1;
+    transition: transform 0.25s ease;
+  }
+
+  /* MOVE LIST */
+  .info-panel {
+    flex: 1;
+    min-width: 260px;
+    max-width: 420px;
+  }
+
+  .moves-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+
+  .moves-box h3 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .move-sequence {
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    color: var(--accent2);
+    line-height: 1.8;
+    word-break: break-all;
+  }
+
+  .move-step {
+    display: inline;
+  }
+
+  .move-step.current-move {
+    background: rgba(245, 166, 35, 0.25);
+    border-radius: 3px;
+    padding: 1px 3px;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .step-desc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    min-height: 80px;
+  }
+
+  .step-desc h3 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .step-desc p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .step-counter {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    padding: 9px 20px;
+    border: none;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-danger {
+    background: rgba(224, 82, 82, 0.15);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+
+  .tips-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .tips-box h3 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--success);
+    margin-bottom: 12px;
+  }
+
+  .tips-box ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .tips-box li {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    padding: 5px 0;
+    padding-left: 18px;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .tips-box li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--success);
+    font-size: 0.8rem;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  /* Welcome screen */
+  .welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 20px;
+    min-height: 60vh;
+  }
+
+  .welcome-icon { font-size: 4rem; margin-bottom: 20px; }
+
+  .welcome h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .welcome p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 440px;
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 24px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      z-index: 50;
+      transform: translateX(-100%);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.open { display: block; }
+    .hamburger { display: block; }
+    .main { padding: 16px; }
+    .square { width: 46px; height: 46px; font-size: 1.8rem; }
+    .rank-label { height: 46px; }
+    .file-label { width: 46px; }
+  }
+
+  @media (max-width: 540px) {
+    .square { width: 38px; height: 38px; font-size: 1.5rem; }
+    .rank-label { height: 38px; }
+    .file-label { width: 38px; }
+    .board-section { flex-direction: column; }
+    .info-panel { max-width: 100%; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  /* Checkmate celebration */
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: inset 0 0 0 3px var(--danger); }
+    50% { box-shadow: inset 0 0 0 5px var(--danger); }
+  }
+
+  .square.checkmate { animation: pulse-red 0.8s ease-in-out infinite; }
+
+  /* Piece animation */
+  @keyframes piece-appear {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .piece-new { animation: piece-appear 0.25s ease-out forwards; }
+
+  /* ---- MODE TABS ---- */
+  .mode-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 3px;
+    margin-left: auto;
+    margin-right: 12px;
+  }
+
+  .mode-tab {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-muted);
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .mode-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ---- SETTINGS GEAR ---- */
+  .settings-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+
+  .settings-btn:hover { color: var(--text); background: var(--surface2); }
+
+  /* ---- MODAL ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    width: min(420px, 90vw);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .modal h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .modal label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .modal input[type="password"],
+  .modal input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    padding: 9px 12px;
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .modal input:focus { border-color: var(--accent); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  /* ---- AI EXPLANATION BOX ---- */
+  .ai-box {
+    background: linear-gradient(135deg, #1a2040, #201a35);
+    border: 1px solid rgba(108, 142, 245, 0.3);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text);
+    min-height: 60px;
+  }
+
+  .ai-box .ai-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .ai-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- EVAL MODE ---- */
+  .eval-sidebar-inner { padding: 16px 0; }
+
+  .eval-score-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .eval-score-bar strong { color: var(--accent2); font-size: 1rem; }
+
+  .eval-scenario-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text);
+    padding: 11px 16px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: inherit;
+    border-left: 3px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+    line-height: 1.3;
+  }
+
+  .eval-scenario-btn:hover { background: var(--surface2); }
+
+  .eval-scenario-btn.active {
+    background: var(--surface2);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .eval-status-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .eval-status-icon.correct { background: rgba(76,175,135,0.2); border-color: var(--success); color: var(--success); }
+  .eval-status-icon.wrong   { background: rgba(224,82,82,0.2);  border-color: var(--danger);  color: var(--danger); }
+
+  .eval-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .eval-header {
+    margin-bottom: 4px;
+  }
+
+  .eval-header h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .eval-header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-width: 680px;
+  }
+
+  .eval-color-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .eval-color-badge.white { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+  .eval-color-badge.black { background: rgba(0,0,0,0.4); color: #ccc; border: 1px solid #555; }
+
+  .eval-board-section {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .eval-info-panel {
+    flex: 1;
+    min-width: 240px;
+    max-width: 400px;
+  }
+
+  .eval-result-box {
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .eval-result-box.show { display: block; }
+
+  .eval-result-box.correct {
+    background: rgba(76,175,135,0.15);
+    border: 1px solid var(--success);
+    color: var(--success);
+  }
+
+  .eval-result-box.wrong {
+    background: rgba(224,82,82,0.15);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+  }
+
+  .eval-result-box.hint {
+    background: rgba(245,166,35,0.1);
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+  }
+
+  .eval-instruction {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* Interactive board squares */
+  .square.selectable { cursor: pointer; }
+  .square.selected   { background: rgba(108,142,245,0.6) !important; }
+  .square.target-sq  { background: rgba(108,142,245,0.35) !important; cursor: pointer; }
+
+  .eval-tips-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+
+  .eval-tips-box h3 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .eval-tips-box ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .eval-tips-box li {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding: 4px 0 4px 18px;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .eval-tips-box li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+
+  .eval-reset-btn {
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
+  <span style="font-size:1.5rem;">♟</span>
+  <h1>Sneaky Chess Tricks</h1>
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabLearn" onclick="switchMode('learn')">📖 Learn</button>
+    <button class="mode-tab" id="tabEval" onclick="switchMode('eval')">⚔️ Eval</button>
+  </div>
+  <button class="settings-btn" id="settingsBtn" title="Settings / OpenAI API Key">⚙</button>
+</header>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>⚙ Settings</h2>
+    <p>Enter your OpenAI API key to enable AI-powered move explanations. Your key is saved in your browser's localStorage and never sent anywhere except directly to OpenAI.</p>
+    <label for="apiKeyInput">OpenAI API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;">
+      Get a key at <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent);">platform.openai.com/api-keys</a>. Model used: <code style="color:var(--accent2);">gpt-4o-mini</code>.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <nav class="sidebar" id="sidebar">
+    <!-- Learn mode sidebar -->
+    <div id="learnSidebar">
+      <div class="sidebar-inner" id="lessonList"></div>
+    </div>
+    <!-- Eval mode sidebar -->
+    <div id="evalSidebar" style="display:none;">
+      <div class="eval-sidebar-inner">
+        <div class="eval-score-bar">
+          Score: <strong id="evalScoreText">0 / 0</strong> scenarios solved
+        </div>
+        <div id="evalScenarioList"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="mainContent">
+    <!-- LEARN MODE -->
+    <div id="learnModeContent">
+      <div class="welcome" id="welcomeScreen">
+        <div class="welcome-icon">♜</div>
+        <h2>Welcome to Sneaky Chess</h2>
+        <p>Learn the dirtiest tricks in chess — opening traps, tactical weapons, and checkmate patterns your opponents won't see coming. Pick a lesson from the left to get started.</p>
+        <div class="stats-row">
+          <div class="stat"><div class="stat-num">5</div><div class="stat-label">Opening Traps</div></div>
+          <div class="stat"><div class="stat-num">4</div><div class="stat-label">Tactics</div></div>
+          <div class="stat"><div class="stat-num">3</div><div class="stat-label">Mate Patterns</div></div>
+        </div>
+        <p style="font-size:0.85rem; color: var(--text-muted);">Tap any lesson to step through moves on an interactive board.</p>
+      </div>
+      <div id="lessonContent" style="display:none;"></div>
+    </div>
+    <!-- EVAL MODE -->
+    <div id="evalModeContent" style="display:none;">
+      <div id="evalContent"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ============================================================
+//  CHESS ENGINE (minimal — legacy 2D board for existing lessons)
+// ============================================================
+
+const FILES = ['a','b','c','d','e','f','g','h'];
+const RANKS = ['8','7','6','5','4','3','2','1']; // top to bottom for display
+
+function sq(file, rank) {
+  return FILES[file] + (8 - rank);
+}
+
+function sqToIdx(sqStr) {
+  const f = FILES.indexOf(sqStr[0]);
+  const r = 8 - parseInt(sqStr[1]);
+  return { f, r };
+}
+
+const UNICODE = {
+  K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙',
+  k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟'
+};
+
+// Unicode for flat-board piece codes (used by eval mode)
+const UNICODE_FLAT = {
+  wK:'♔', wQ:'♕', wR:'♖', wB:'♗', wN:'♘', wP:'♙',
+  bK:'♚', bQ:'♛', bR:'♜', bB:'♝', bN:'♞', bP:'♟'
+};
+
+function emptyBoard() {
+  return Array.from({length:8}, () => Array(8).fill(null));
+}
+
+function startBoard() {
+  const b = emptyBoard();
+  b[0] = ['r','n','b','q','k','b','n','r'];
+  b[1] = ['p','p','p','p','p','p','p','p'];
+  b[6] = ['P','P','P','P','P','P','P','P'];
+  b[7] = ['R','N','B','Q','K','B','N','R'];
+  return b;
+}
+
+function cloneBoard(b) {
+  return b.map(r => [...r]);
+}
+
+function applyMove(board, move) {
+  const b = cloneBoard(board);
+  const {f: ff, r: fr} = sqToIdx(move.from);
+  const {f: tf, r: tr} = sqToIdx(move.to);
+  const piece = b[fr][ff];
+  b[tr][tf] = move.promote ? move.promote : piece;
+  b[fr][ff] = null;
+  if (piece === 'K' && move.from === 'e1') {
+    if (move.to === 'g1') { b[7][7] = null; b[7][5] = 'R'; }
+    if (move.to === 'c1') { b[7][0] = null; b[7][3] = 'R'; }
+  }
+  if (piece === 'k' && move.from === 'e8') {
+    if (move.to === 'g8') { b[0][7] = null; b[0][5] = 'r'; }
+    if (move.to === 'c8') { b[0][0] = null; b[0][3] = 'r'; }
+  }
+  return b;
+}
+
+// ============================================================
+//  SETTINGS / OPENAI API KEY
+// ============================================================
+
+function getApiKey() {
+  return localStorage.getItem('sneaky_chess_openai_key') || '';
+}
+
+function openSettings() {
+  const key = getApiKey();
+  document.getElementById('apiKeyInput').value = key;
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+
+function saveSettings() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) {
+    localStorage.setItem('sneaky_chess_openai_key', key);
+  } else {
+    localStorage.removeItem('sneaky_chess_openai_key');
+  }
+  closeSettings();
+}
+
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+
+// ============================================================
+//  OPENAI API INTEGRATION
+// ============================================================
+
+async function fetchAIExplanation(lessonName, san, from, to) {
+  const apiKey = getApiKey();
+  if (!apiKey) return null;
+
+  const prompt = `In the lesson '${lessonName}', the next move is ${san} (from ${from} to ${to}). In 1-2 sentences, explain why this move is so sneaky and what it threatens. Be concise.`;
+
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 120,
+        messages: [
+          { role: 'system', content: 'You are a chess tactics instructor. Explain chess moves concisely and with personality. Be fun and a bit cheeky.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function fetchAIEvalExplanation(scenarioName, moveDesc, result) {
+  const apiKey = getApiKey();
+  if (!apiKey) return null;
+
+  const resultStr = result === 'correct' ? 'the correct defensive move' : result === 'wrong' ? 'the blundering trap move' : 'an alternative move';
+  const prompt = `In the chess scenario '${scenarioName}', the player chose ${moveDesc}, which is ${resultStr}. In 1-2 sentences, explain what just happened and why. Be concise and a bit cheeky.`;
+
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 120,
+        messages: [
+          { role: 'system', content: 'You are a chess tactics instructor. Explain chess moves concisely and with personality. Be fun and a bit cheeky.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ============================================================
+//  LESSONS DATA
+// ============================================================
+
+const LESSONS = [
+  // ---- OPENING TRAPS ----
+  {
+    id: 'fools-mate',
+    category: 'trap',
+    title: "Fool's Mate",
+    badge: "Fastest Checkmate in Chess",
+    desc: "Two moves. That's all it takes. White walks into the shortest possible checkmate by weakening the king's diagonal with nonsensical pawn moves. If you ever play f3 and g4 as White, you deserve what's coming.",
+    moves: [
+      { from:'f2', to:'f3', san:'f3',    side:'w', desc:"White advances the f-pawn — weakening the diagonal in front of the king for absolutely no reason." },
+      { from:'e7', to:'e5', san:'e5',    side:'b', desc:"Black plays normally, grabbing center space." },
+      { from:'g2', to:'g4', san:'g4',    side:'w', desc:"White blunders again, opening the h4–e1 diagonal. The king is now completely exposed." },
+      { from:'d8', to:'h4', san:'Qh4#',  side:'b', desc:"CHECKMATE! Black's queen swoops in. The White king has no escape and no blocking piece. It's over in 2 moves.", highlight: ['h4','f2','g2'], highlightType:'trap' }
+    ],
+    startFen: null, // use standard start
+    board: startBoard(),
+    tips: [
+      "Never play f3 without a very good reason — it weakens e4 and the king diagonal.",
+      "g4 as an early pawn push is almost always a mistake for White.",
+      "As Black, always watch for an open h4–e1 diagonal.",
+      "This trap only works if White plays like someone who has never seen a chess board."
+    ]
+  },
+  {
+    id: 'scholars-mate',
+    category: 'trap',
+    title: "Scholar's Mate",
+    badge: "The Classic Beginner Trap",
+    desc: "The oldest trick in the book. White launches a 4-move attack on f7 — the weakest square in Black's position at the start. Thousands of beginners fall for this every day. Learn it so you can use it AND so you never fall for it.",
+    moves: [
+      { from:'e2', to:'e4', san:'e4',   side:'w', desc:"Classic 1.e4 — controlling the center and opening lines for bishop and queen." },
+      { from:'e7', to:'e5', san:'e5',   side:'b', desc:"Black mirrors, claiming equal central ground." },
+      { from:'f1', to:'c4', san:'Bc4',  side:'w', desc:"The Italian bishop comes out, eyeing f7 — the square protected only by Black's king. This is the key attacking piece." },
+      { from:'b8', to:'c6', san:'Nc6',  side:'b', desc:"Black develops a knight naturally — but hasn't spotted the threat yet." },
+      { from:'d1', to:'h5', san:'Qh5',  side:'w', desc:"White brings out the queen early, attacking e5 AND threatening Qxf7#. This is very aggressive. A strong player can refute it, but beginners often miss it.", highlight:['h5','f7'], highlightType:'trap' },
+      { from:'g8', to:'f6', san:'Nf6??', side:'b', desc:"Black tries to counter-attack the queen — but this is the losing move! The f7 square is still only protected by the king.", highlight:['f6','f7'], highlightType:'trap' },
+      { from:'h5', to:'f7', san:'Qxf7#', side:'w', desc:"CHECKMATE! The queen takes f7, protected by the bishop on c4. Black's king cannot capture (queen is guarded) and cannot escape. Scholar's Mate!", highlight:['f7','c4'], highlightType:'trap' }
+    ],
+    board: startBoard(),
+    tips: [
+      "As Black, if you see Bc4 + Qh5, defend f7 immediately with ...g6 or ...Qe7.",
+      "The correct response to Qh5 is Nc6 (already done) then g6 to kick the queen.",
+      "Or simply: 3...Qe7 defends e5 and watches f7 at the same time.",
+      "As White, this only works against players who don't know the defense. Treat it as a learning tool, not a serious weapon."
+    ]
+  },
+  {
+    id: 'fried-liver',
+    category: 'trap',
+    title: "Fried Liver Attack",
+    badge: "Sacrifice to Destroy",
+    desc: "White sacrifices a knight on f7 to drag the Black king out into the open. It's one of the most violent opening attacks in all of chess. The king ends up on a long, uncomfortable journey while White's pieces go hunting.",
+    moves: [
+      { from:'e2', to:'e4', san:'e4',   side:'w', desc:"1.e4 — we're in Italian/Two Knights territory." },
+      { from:'e7', to:'e5', san:'e5',   side:'b', desc:"Black responds." },
+      { from:'g1', to:'f3', san:'Nf3',  side:'w', desc:"Knight to f3, developing and attacking e5." },
+      { from:'b8', to:'c6', san:'Nc6',  side:'b', desc:"Black defends e5 with the knight." },
+      { from:'f1', to:'c4', san:'Bc4',  side:'w', desc:"Italian bishop to c4, setting up for potential Ng5 threats." },
+      { from:'g8', to:'f6', san:'Nf6',  side:'b', desc:"Black plays the Two Knights Defense — the most combative response." },
+      { from:'f3', to:'g5', san:'Ng5',  side:'w', desc:"The knight lunges to g5, creating a double threat against f7. This is where it gets nasty.", highlight:['g5','f7'], highlightType:'trap' },
+      { from:'d7', to:'d5', san:'d5',   side:'b', desc:"Black's best move — counter-attacking in the center to challenge White's setup." },
+      { from:'e4', to:'d5', san:'exd5', side:'w', desc:"White captures, opening the position." },
+      { from:'f6', to:'d5', san:'Nxd5??', side:'b', desc:"Black recaptures with the knight — but this walks into the sacrifice! The correct move was Nxd5 only if prepared for what follows.", highlight:['d5','f7'], highlightType:'trap' },
+      { from:'g5', to:'f7', san:'Nxf7!', side:'w', desc:"THE FRIED LIVER SACRIFICE! White gives up a whole knight to drag the king out. The king must take because the fork on d5+h8 is threatened.", highlight:['f7'], highlightType:'trap' }
+    ],
+    board: startBoard(),
+    tips: [
+      "After Nxf7, Black's king takes, then White plays Qf3+ continuing the attack on the exposed king.",
+      "The correct defense against Ng5 is NOT Nxd5 but rather Na5 or h6 to kick the knight first.",
+      "If you see Ng5 as Black, ask yourself: 'Is f7 safe?' If not, defend it.",
+      "This attack requires precise follow-up — it's not just about the sacrifice."
+    ]
+  },
+  {
+    id: 'legals-trap',
+    category: 'trap',
+    title: "Legal's Trap",
+    badge: "Fake Queen Sacrifice",
+    desc: "White appears to blunder their queen, but it's all a trick. Black greedily grabs the queen only to get mated by minor pieces. One of the most satisfying traps in chess — your opponent will feel very clever for exactly 2 seconds.",
+    moves: [
+      { from:'e2', to:'e4', san:'e4',   side:'w', desc:"1.e4" },
+      { from:'e7', to:'e5', san:'e5',   side:'b', desc:"1...e5" },
+      { from:'g1', to:'f3', san:'Nf3',  side:'w', desc:"Knight out, attacking e5." },
+      { from:'b8', to:'c6', san:'Nc6',  side:'b', desc:"Black defends e5." },
+      { from:'f1', to:'c4', san:'Bc4',  side:'w', desc:"Italian bishop development." },
+      { from:'c8', to:'g4', san:'Bg4',  side:'b', desc:"Black pins the f3 knight against the queen! This is the key move that sets up White's trap.", highlight:['g4','f3','d1'], highlightType:'good' },
+      { from:'b1', to:'c3', san:'Nc3',  side:'w', desc:"White develops another knight, reinforcing e4 and the center — and setting up the trick." },
+      { from:'g7', to:'g6', san:'g6',   side:'b', desc:"Black plays a natural developing move, preparing to fianchetto the bishop maybe." },
+      { from:'c3', to:'e4', san:'Nxe5!', side:'w', desc:"White appears to blunder! The Nxe5 move 'ignores' the pin — if Black takes the queen with Bxd1, what happens?", highlight:['e5','d1','g4'], highlightType:'trap' },
+      { from:'g4', to:'d1', san:'Bxd1??', side:'b', desc:"Black takes the queen — surely winning! But this is the losing move. White now demolishes Black with minor pieces.", highlight:['d1'], highlightType:'trap' },
+      { from:'c4', to:'f7', san:'Bxf7+', side:'w', desc:"CHECK! The bishop forks king and rook on f7. The king must move.", highlight:['f7','e8'], highlightType:'trap' },
+      { from:'e8', to:'e7', san:'Ke7',  side:'b', desc:"King moves to e7 — forced." },
+      { from:'e5', to:'d5', san:'Nd5#', side:'w', desc:"CHECKMATE! The knight delivers checkmate on d5. The Black king is trapped by its own pieces. White won with NO queen!", highlight:['d5','e7'], highlightType:'trap' }
+    ],
+    board: startBoard(),
+    tips: [
+      "When you pin a piece, make sure the 'pin' is actually legally binding — calculate if the piece CAN move anyway.",
+      "White's Nxe5 works because Bxd1 allows Bxf7+ Ke7 Nd5#.",
+      "As Black, instead of Bxd1, play Nxe5! attacking the bishop and maintaining material equality.",
+      "Greedy material grabs without calculation are how you get mated with no queen on the board."
+    ]
+  },
+  {
+    id: 'budapest-trap',
+    category: 'trap',
+    title: "Budapest Gambit Trap",
+    badge: "Counterpunch Gambit",
+    desc: "Black gives up a pawn on move 2 and gets a ferocious counterattack. White tries to hold the extra pawn with natural-looking moves and walks straight into a piece trap. The knight goes to a square it can never escape from.",
+    moves: [
+      { from:'d2', to:'d4', san:'d4',   side:'w', desc:"White opens with d4." },
+      { from:'g8', to:'f6', san:'Nf6',  side:'b', desc:"Black plays Nf6, a flexible response." },
+      { from:'c2', to:'c4', san:'c4',   side:'w', desc:"White expands in the center with c4." },
+      { from:'e7', to:'e5', san:'e5',   side:'b', desc:"THE BUDAPEST GAMBIT — Black sacrifices a pawn immediately for rapid development and activity!", highlight:['e5'], highlightType:'good' },
+      { from:'d4', to:'e5', san:'dxe5', side:'w', desc:"White accepts — taking the pawn. This is the challenge." },
+      { from:'f6', to:'g4', san:'Ng4',  side:'b', desc:"Black attacks the e5 pawn immediately with the knight." },
+      { from:'e5', to:'f4', san:'e4?',  side:'w', desc:"White tries to hold the pawn by advancing it — but this is the trap! White should play Nf3 instead.", highlight:['f4','g4'], highlightType:'trap' },
+      { from:'d8', to:'e7', san:'Qe7!', side:'b', desc:"Black plays Qe7, attacking the advanced pawn AND setting up a pin against the king!", highlight:['e7','f4','e1'], highlightType:'good' },
+      { from:'f2', to:'f3', san:'f3?',  side:'w', desc:"White tries to defend, but this creates more weaknesses around the king.", highlight:['f3'], highlightType:'trap' },
+      { from:'g4', to:'h4', san:'Nh4!', side:'b', desc:"The knight goes to h4 — the TRAP SQUARE. From here, the knight attacks f3 and g2 and cannot be attacked by any pawn!", highlight:['h4','f3','g2'], highlightType:'trap' },
+      { from:'g2', to:'g3', san:'g3',   side:'w', desc:"White tries to kick the knight but..." },
+      { from:'h4', to:'f3', san:'Nxf3+',side:'b', desc:"FORK! Knight takes f3 with check, forking king and rook!", highlight:['f3','e1','h1'], highlightType:'trap' }
+    ],
+    board: startBoard(),
+    tips: [
+      "Against the Budapest Gambit, Nf3 is more solid than trying to hold the pawn with e4.",
+      "When a knight lands on h4 with pawns on f3 and g3, it's often a monster — it attacks f3 and g2 and can't be chased away.",
+      "Always ask: if my opponent plays their 'dream move', what happens? Here it's ...Qe7 forking f4.",
+      "The Budapest is a legitimate weapon at club level — White needs to know the theory or face problems."
+    ]
+  },
+
+  // ---- TACTICS ----
+  {
+    id: 'knight-fork',
+    category: 'tactic',
+    title: "Knight Fork",
+    badge: "Two for the Price of One",
+    desc: "The knight is the sneakiest piece because it jumps over everything and attacks in an L-shape no one expects. A fork is when one piece attacks two enemy pieces at once, forcing your opponent to lose material. Knights are the best at this.",
+    moves: [
+      { from:'e5', to:'f7', san:'Nf7!', side:'w', desc:"The knight leaps to f7 — the fork square! It simultaneously attacks the Black queen on d8 AND the rook on h8.", highlight:['f7','d8','h8'], highlightType:'trap' },
+      { from:'d8', to:'e7', san:'Qe7',  side:'b', desc:"Black moves the queen to save it from capture." },
+      { from:'f7', to:'h8', san:'Nxh8', side:'w', desc:"White captures the rook for free! The knight fork won an entire rook.", highlight:['h8'], highlightType:'good' }
+    ],
+    boardSetup: () => {
+      const b = emptyBoard();
+      b[0][4] = 'k'; // e8
+      b[0][7] = 'r'; // h8
+      b[1][3] = 'q'; // d7... let's place pieces clearly
+      // Let's set up a clear fork position
+      // Black: king e8, queen d8, rook h8
+      // White: king e1, knight e5
+      b[0][3] = 'q'; // d8
+      b[0][7] = 'r'; // h8
+      b[0][4] = 'k'; // e8
+      b[7][4] = 'K'; // e1
+      b[3][4] = 'N'; // e5
+      return b;
+    },
+    tips: [
+      "Always scan for knight fork squares — look for a square from which a knight attacks two valuable pieces.",
+      "King + queen, king + rook, queen + rook are the best fork targets.",
+      "The 'family fork' attacks king, queen, AND rook at once — instant win.",
+      "Set up forks by forcing pieces onto the right squares with checks or threats."
+    ]
+  },
+  {
+    id: 'pin',
+    category: 'tactic',
+    title: "The Pin",
+    badge: "Stick Them in Place",
+    desc: "A pin paralyzes a piece — it can't move without exposing a more valuable piece behind it to capture. An absolute pin is against the king (the pinned piece literally cannot move legally). A relative pin is against any other valuable piece.",
+    moves: [
+      { from:'b5', to:'b5', san:'(position set)', side:'w', desc:"Study the position. The White bishop on b5 PINS the Black knight on c6. The knight cannot legally move because it would expose the Black king on e8 to check!", highlight:['b5','c6','e8'], highlightType:'trap' },
+      { from:'d1', to:'d5', san:'Qd5!', side:'w', desc:"White exploits the pin! The queen attacks the pinned knight on c6. Black cannot defend with the knight (it's pinned!)", highlight:['d5','c6'], highlightType:'trap' },
+      { from:'d8', to:'d7', san:'Qd7',  side:'b', desc:"Black tries to defend the knight with the queen, but..." },
+      { from:'d5', to:'c6', san:'Qxc6', side:'w', desc:"White captures the pinned knight! Black can recapture with Qxc6, but White has won a knight for free — the pin exploited a piece that couldn't move legally.", highlight:['c6'], highlightType:'good' }
+    ],
+    boardSetup: () => {
+      const b = emptyBoard();
+      b[0][3] = 'q'; // d8
+      b[0][4] = 'k'; // e8
+      b[2][2] = 'n'; // c6
+      b[3][1] = 'B'; // b5
+      b[7][4] = 'K'; // e1
+      b[7][3] = 'Q'; // d1
+      b[1][3] = 'p'; // d7 pawn
+      b[1][4] = 'p'; // e7 pawn
+      return b;
+    },
+    tips: [
+      "Pins are most powerful when the pinned piece is under-defended.",
+      "Pile pressure on pinned pieces — attack them multiple times.",
+      "Break a pin by interposing a piece, moving the attacked piece behind the pin, or capturing the pinner.",
+      "Bishops and rooks are the best pinners. Bishops pin diagonally, rooks pin on files and ranks."
+    ]
+  },
+  {
+    id: 'skewer',
+    category: 'tactic',
+    title: "The Skewer",
+    badge: "Reverse Pin",
+    desc: "A skewer is like a pin in reverse — the MORE valuable piece is in front. You attack the high-value piece, it moves away, and you capture what was hiding behind it. Queens and kings often get skewered.",
+    moves: [
+      { from:'h1', to:'h1', san:'(position set)', side:'w', desc:"The White rook on h1 is about to deliver a skewer. The Black king is on e8, and the Black queen is behind it on e3. Watch what happens.", highlight:['h1','e8','e3'], highlightType:'good' },
+      { from:'h1', to:'e1', san:'Re1+', side:'w', desc:"CHECK! The rook gives check on e1, attacking the king. The king is the most valuable piece — it MUST move.", highlight:['e1','e8'], highlightType:'trap' },
+      { from:'e8', to:'d8', san:'Kd8',  side:'b', desc:"Black's king flees to d8 to escape check." },
+      { from:'e1', to:'e3', san:'Rxe3', side:'w', desc:"White captures the queen on e3! The skewer won a queen. The king was forced to move, revealing the queen behind it.", highlight:['e3'], highlightType:'good' }
+    ],
+    boardSetup: () => {
+      const b = emptyBoard();
+      b[0][4] = 'k'; // e8 king
+      b[5][4] = 'q'; // e3 queen (row 5 = rank 3)
+      b[7][7] = 'R'; // h1 rook
+      b[7][4] = 'K'; // e1 king... move white king
+      b[7][0] = 'K'; // a1
+      b[7][4] = null;
+      return b;
+    },
+    tips: [
+      "Look for skewers when you have a rook or bishop pointing at a high-value enemy piece.",
+      "Force the valuable piece to move (often with check) to win what's behind it.",
+      "Queens skewering kings down open files or diagonals are very common in endgames.",
+      "Skewers require an open line between your piece and the target."
+    ]
+  },
+  {
+    id: 'discovered-attack',
+    category: 'tactic',
+    title: "Discovered Attack",
+    badge: "The Silent Ambush",
+    desc: "A discovered attack is triggered when you move one piece, revealing an attack by another piece that was hiding behind it. The sneaky part: you're making TWO threats with ONE move. The opponent can only deal with one.",
+    moves: [
+      { from:'f4', to:'f4', san:'(position set)', side:'w', desc:"White's bishop on b2 is lined up against Black's queen on g7 — but the White knight on f4 is blocking the diagonal. Time to unleash the ambush!", highlight:['b2','f4','g7'], highlightType:'good' },
+      { from:'f4', to:'e6', san:'Ne6!', side:'w', desc:"The knight DISCOVERS the bishop's attack on the rook on g7 AND itself attacks the Black queen on d8! Two threats, one move. Black can only save one piece.", highlight:['e6','d8','g7','b2'], highlightType:'trap' },
+      { from:'d8', to:'e8', san:'Qe8',  side:'b', desc:"Black saves the queen on d8 by moving it to e8 — but now the rook on g7 is undefended and hanging!" },
+      { from:'e6', to:'g7', san:'Nxg7', side:'w', desc:"White captures the rook on g7 with the knight! The discovered attack won a whole rook for free.", highlight:['g7'], highlightType:'good' }
+    ],
+    boardSetup: () => {
+      const b = emptyBoard();
+      b[1][6] = 'r'; // g7 rook (black)
+      b[0][3] = 'q'; // d8 queen (black)
+      b[0][4] = 'k'; // e8 king
+      b[4][5] = 'N'; // f4 knight (white)
+      b[6][1] = 'B'; // b2 bishop (white)
+      b[7][4] = 'K'; // e1 king
+      return b;
+    },
+    tips: [
+      "Look for pieces lined up on a diagonal/file/rank with a friendly piece blocking — that's your discovered attack setup.",
+      "The best discovered attacks are 'discovered checks' — forcing the king to deal with check first.",
+      "Discovered attacks with double check (both the moved piece AND the revealed piece give check) are impossible to block.",
+      "Always calculate what your retreating or moving piece is threatening PLUS what it reveals."
+    ]
+  },
+
+  // ---- CHECKMATE PATTERNS ----
+  {
+    id: 'back-rank-mate',
+    category: 'mate',
+    title: "Back Rank Mate",
+    badge: "The Rookie Killer",
+    desc: "The most common way to lose a won position. Your opponent's major pieces march down to your back rank and deliver checkmate because your king is trapped behind its own pawns with no escape square. This kills beginners and club players every single day.",
+    moves: [
+      { from:'h1', to:'h1', san:'(position set)', side:'w', desc:"The position: White has a rook on d1. Black's king is stuck on g8, blocked by pawns on f7, g7, h7. Those pawns look protective — they're actually a prison.", highlight:['g8','f7','g7','h7'], highlightType:'trap' },
+      { from:'d1', to:'d8', san:'Rd8#', side:'w', desc:"CHECKMATE! The rook slides to d8. Black's king cannot move (pawns block escape), cannot capture the rook (it's on d8, not adjacent), and no piece can block. The pawns that were 'protecting' the king became its jail cell!", highlight:['d8','g8'], highlightType:'trap' }
+    ],
+    boardSetup: () => {
+      const b = emptyBoard();
+      b[0][6] = 'k'; // g8
+      b[1][5] = 'p'; // f7
+      b[1][6] = 'p'; // g7
+      b[1][7] = 'p'; // h7
+      b[7][3] = 'R'; // d1
+      b[7][6] = 'K'; // g1
+      b[6][6] = 'P'; // g2
+      b[6][7] = 'P'; // h2
+      return b;
+    },
+    tips: [
+      "Always create a 'luft' (escape square) by moving h3 or g3 when your king is castled behind pawns.",
+      "If you have a back rank weakness, look for checks and captures that force your rooks to defend.",
+      "Before playing a rook trade, ask: 'Do I have a back rank mate threat?'",
+      "A rook on the 7th rank (or 2nd for Black) is already threatening back rank tricks — be paranoid."
+    ]
+  },
+  {
+    id: 'smothered-mate',
+    category: 'mate',
+    title: "Smothered Mate",
+    badge: "Suffocated by Your Own Pieces",
+    desc: "A knight delivers checkmate to a king surrounded by its own pieces. The king literally suffocates. The classic Philidor's legacy pattern uses a queen sacrifice to lure the rook to d8, then the knight dances the king into a corner — where a lone knight delivers the final blow.",
+    moves: [
+      { from:'g5', to:'g5', san:'(position set)', side:'w', desc:"The classic Smothered Mate setup. Black: king g8 (castled), pawns f7/g7/h7 sealing it in, rook f8, rook h8, queen d8. White: knight g5, queen d1. Those cozy-looking pawns are about to become a prison.", highlight:['g8','f7','g7','h7'], highlightType:'trap' },
+      { from:'g5', to:'e6', san:'Ne6+', side:'w', desc:"CHECK! The knight forks the king AND the queen on d8. Black's king cannot capture the knight (the queen on d8 defends e6 — wait, does it? Check the diagonal). The king must move.", highlight:['e6','d8','g8'], highlightType:'trap' },
+      { from:'g8', to:'h8', san:'Kh8',  side:'b', desc:"King runs to the corner. The only legal escape from the check." },
+      { from:'d1', to:'d8', san:'Qxd8+',side:'w', desc:"THE QUEEN SACRIFICE! White gives up their queen to take Black's queen with check. This looks insane, but it forces the rook to recapture — which completes the smothering prison.", highlight:['d8','f8'], highlightType:'trap' },
+      { from:'f8', to:'d8', san:'Rxd8', side:'b', desc:"Black must recapture. The rook goes to d8. Now look at the Black king on h8 — it's completely boxed in by its own rook (h8) and pawns (g7, h7). The cage is sealed." },
+      { from:'e6', to:'f7', san:'Nf7+', side:'w', desc:"CHECK again! The knight checks from f7. The king is trapped — g8 is occupied by... oh wait, after Rxd8 the rook moved. King can go to g8.", highlight:['f7','h8'], highlightType:'trap' },
+      { from:'h8', to:'g8', san:'Kg8',  side:'b', desc:"King retreats to g8. But now g7 pawn, h7 pawn and the rook on d8 are blocking. The king's prison is almost complete." },
+      { from:'f7', to:'h6', san:'Nh6+', side:'w', desc:"CHECK from h6! The knight bounces, keeping constant pressure on the king, forcing it back to the corner.", highlight:['h6','g8'], highlightType:'trap' },
+      { from:'g8', to:'h8', san:'Kh8',  side:'b', desc:"King is forced back to h8. The corner of doom." },
+      { from:'h6', to:'g8', san:'Ng8!!',side:'w', desc:"THE BRILLIANT SACRIFICE! The knight boldly goes to g8 — which is defended by the rook on h8! This forces the king to capture. It looks like White is blundering the last attacking piece.", highlight:['g8','h8'], highlightType:'trap' },
+      { from:'h8', to:'g8', san:'Kxg8', side:'b', desc:"King captures the knight on g8 — forced. There's no other legal move. Now the king is on g8... surrounded by its own pawns on f7, g7, h7, with the rook still on d8." },
+      { from:'f7', to:'f7', san:'(Nf7# next)', side:'w', desc:"There's no White knight left on the board... but wait — White has a SECOND knight! Or in the original version: this sequence typically ends with a second knight appearing. The key takeaway: the king on g8 is completely smothered by f7, g7, h7 pawns — ANY knight on f5 or e6 can deliver #.", highlight:['g8','f7','g7','h7'], highlightType:'trap' }
+    ],
+    boardSetup: () => {
+      const b = emptyBoard();
+      // Classic smothered mate setup
+      // Black: king g8, rook f8, rook h8, pawns f7 g7 h7, queen d8
+      b[0][6] = 'k'; // g8
+      b[0][5] = 'r'; // f8
+      b[0][7] = 'r'; // h8
+      b[1][5] = 'p'; // f7
+      b[1][6] = 'p'; // g7
+      b[1][7] = 'p'; // h7
+      b[0][3] = 'q'; // d8 black queen
+      // White: king g1, queen d1, knight g5 (main knight), knight c3 (second knight for final blow)
+      b[7][6] = 'K'; // g1
+      b[7][3] = 'Q'; // d1
+      b[3][6] = 'N'; // g5 - main attacking knight
+      b[5][2] = 'N'; // c3 - second knight that delivers final mate
+      return b;
+    },
+    tips: [
+      "The key indicator: enemy king in corner + all escape squares blocked by its own pieces.",
+      "The queen sacrifice (Qxd8+) forces the rook to d8, completing the smothering cage around the king.",
+      "Smothered mate is knight-only — the knight uniquely jumps over pieces, able to reach a cornered king.",
+      "The tell: when the enemy king has pawns on f7/g7/h7 and a rook on h8, look for smothered mate patterns immediately."
+    ]
+  },
+  {
+    id: 'opera-mate',
+    category: 'mate',
+    title: "Opera Mate",
+    badge: "Bishop + Rook Poetry",
+    desc: "Named after the famous Opera Game by Paul Morphy (1858), this elegant mating pattern uses a bishop and rook together to checkmate the king on the back rank. The bishop covers escape squares while the rook delivers the final blow.",
+    moves: [
+      { from:'h1', to:'h1', san:'(position set)', side:'w', desc:"The Opera Mate setup: White has bishop on b2 and rook ready. Black's king is on g8, hemmed in. The bishop on b2 controls the long diagonal through g7.", highlight:['b2','g7','g8'], highlightType:'good' },
+      { from:'d1', to:'d8', san:'Rd8#', side:'w', desc:"CHECKMATE! The rook delivers mate on d8. The bishop on b2 controls g7, preventing the king from escaping. The rook covers the entire d-file. Beautiful and brutal.", highlight:['d8','b2','g7','g8'], highlightType:'trap' }
+    ],
+    boardSetup: () => {
+      const b = emptyBoard();
+      b[0][6] = 'k'; // g8
+      b[1][6] = 'p'; // g7
+      b[1][7] = 'p'; // h7
+      b[1][5] = 'p'; // f7
+      b[6][1] = 'B'; // b2
+      b[7][3] = 'R'; // d1
+      b[7][6] = 'K'; // g1
+      b[0][5] = 'r'; // f8 black rook
+      b[0][7] = 'r'; // h8 black rook (both rooks so no castling confusion)
+      return b;
+    },
+    tips: [
+      "The bishop must control the king's flight square on the long diagonal — this is the key.",
+      "This pattern appears when the opponent's king has castled kingside and the g7 pawn is defended but the diagonal is open.",
+      "In the original Opera Game, Morphy won against two French noblemen who were distracted by the opera — true story.",
+      "Rook + bishop mates require the bishop to cover the escape squares while the rook delivers the check on the back rank."
+    ]
+  }
+];
+
+// Fix boardSetup for lessons that have it
+LESSONS.forEach(l => {
+  if (l.boardSetup) {
+    l.board = l.boardSetup();
+  }
+});
+
+// ============================================================
+//  APP STATE
+// ============================================================
+
+let currentLesson = null;
+let currentStep = -1;    // -1 = initial position
+let boardStates = [];    // board state at each step
+
+// ============================================================
+//  UI HELPERS
+// ============================================================
+
+function getSquareColor(file, rank) {
+  return (file + rank) % 2 === 0 ? 'light' : 'dark';
+}
+
+function renderBoard(board, highlights, highlightType) {
+  const ht = highlightType || 'move';
+  let html = '<div class="board-container">';
+
+  for (let rank = 0; rank < 8; rank++) {
+    html += '<div class="board-row">';
+    html += `<div class="rank-label">${8 - rank}</div>`;
+    for (let file = 0; file < 8; file++) {
+      const sqName = FILES[file] + (8 - rank);
+      const color = getSquareColor(file, rank);
+      let cls = `square ${color}`;
+      let extraCls = '';
+      if (highlights && highlights.includes(sqName)) {
+        if (ht === 'trap') extraCls = ' hl-trap';
+        else if (ht === 'good') extraCls = ' hl-good';
+        else extraCls = ' hl-move';
+      }
+      cls += extraCls;
+      const piece = board[rank][file];
+      const pieceHtml = piece ? `<span class="piece">${UNICODE[piece]}</span>` : '';
+      html += `<div class="${cls}" data-sq="${sqName}">${pieceHtml}</div>`;
+    }
+    html += '</div>';
+  }
+
+  html += '<div class="file-labels">';
+  FILES.forEach(f => { html += `<div class="file-label">${f}</div>`; });
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function buildBoardStates(lesson) {
+  const states = [];
+  let board = cloneBoard(lesson.board);
+  states.push(cloneBoard(board));
+  lesson.moves.forEach(move => {
+    // Annotation-only moves: same from/to OR san starts with '('
+    const isAnnotation = move.san.startsWith('(') || move.from === move.to;
+    if (isAnnotation) {
+      states.push(cloneBoard(board)); // no board change
+    } else {
+      board = applyMove(board, move);
+      states.push(cloneBoard(board));
+    }
+  });
+  return states;
+}
+
+// ============================================================
+//  RENDER SIDEBAR
+// ============================================================
+
+function buildSidebar() {
+  const container = document.getElementById('lessonList');
+  const categories = [
+    { key:'trap',   label:'Opening Traps',      tagClass:'tag-trap' },
+    { key:'tactic', label:'Tactics',             tagClass:'tag-tactic' },
+    { key:'mate',   label:'Checkmate Patterns',  tagClass:'tag-mate' }
+  ];
+
+  let html = '';
+  categories.forEach(cat => {
+    html += `<div class="category-label">${cat.label}</div>`;
+    LESSONS.filter(l => l.category === cat.key).forEach(lesson => {
+      html += `<button class="lesson-btn" onclick="loadLesson('${lesson.id}')" id="btn-${lesson.id}">
+        ${lesson.title}
+        <br><span class="cat-tag ${cat.tagClass}">${cat.label.replace('Opening ','').replace(' Patterns','')}</span>
+      </button>`;
+    });
+  });
+
+  container.innerHTML = html;
+}
+
+// ============================================================
+//  LOAD LESSON
+// ============================================================
+
+function loadLesson(id) {
+  currentLesson = LESSONS.find(l => l.id === id);
+  if (!currentLesson) return;
+
+  currentStep = -1;
+  boardStates = buildBoardStates(currentLesson);
+
+  // Update sidebar active state
+  document.querySelectorAll('.lesson-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('btn-' + id);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // Hide welcome, show lesson
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.getElementById('lessonContent').style.display = 'block';
+
+  renderLesson();
+  closeSidebar();
+}
+
+function renderLesson() {
+  const lesson = currentLesson;
+  const totalSteps = lesson.moves.length;
+  const step = currentStep; // -1 = intro
+
+  // Current board
+  const boardIdx = step + 1; // 0 = initial
+  const board = boardStates[boardIdx];
+
+  // Highlights
+  let highlights = [];
+  let highlightType = 'move';
+  if (step >= 0) {
+    const move = lesson.moves[step];
+    if (move.highlight) {
+      highlights = move.highlight;
+      highlightType = move.highlightType || 'move';
+    } else if (!move.san.startsWith('(')) {
+      highlights = [move.from, move.to];
+      highlightType = 'move';
+    }
+  }
+
+  // Step description
+  let stepTitle, stepDesc;
+  if (step === -1) {
+    stepTitle = 'Overview';
+    stepDesc = lesson.desc;
+  } else {
+    const move = lesson.moves[step];
+    stepTitle = `Step ${step + 1} of ${totalSteps}: ${move.san}`;
+    stepDesc = move.desc;
+  }
+
+  // Progress
+  const progress = step === -1 ? 0 : Math.round(((step + 1) / totalSteps) * 100);
+
+  // Move sequence HTML — track real move numbers
+  let moveSeqHtml = '';
+  let moveCounter = 1;
+  let lastSide = 'b'; // so first white move triggers increment
+  lesson.moves.forEach((m, i) => {
+    const isAnnotation = m.san.startsWith('(');
+    let moveNum = '';
+    if (!isAnnotation) {
+      if (m.side === 'w') {
+        moveNum = `${moveCounter}. `;
+      } else {
+        moveCounter++;
+      }
+    }
+    lastSide = m.side;
+    const cls = i === step ? 'move-step current-move' : 'move-step';
+    moveSeqHtml += `<span class="${cls}" id="ms-${i}">${moveNum}${m.san} </span>`;
+  });
+
+  const catLabels = { trap:'Opening Trap', tactic:'Tactic', mate:'Checkmate Pattern' };
+  const catTagClasses = { trap:'tag-trap', tactic:'tag-tactic', mate:'tag-mate' };
+
+  const html = `
+    <div class="lesson-header">
+      <div class="sneaky-badge">${lesson.badge}</div>
+      <h2 class="lesson-title">${lesson.title}</h2>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" style="width:${progress}%"></div>
+    </div>
+
+    <div class="board-section">
+      <div class="board-wrap">
+        ${renderBoard(board, highlights, highlightType)}
+      </div>
+
+      <div class="info-panel">
+        <div class="moves-box">
+          <h3>Move Sequence</h3>
+          <div class="move-sequence">${moveSeqHtml}</div>
+        </div>
+
+        <div class="step-desc" id="stepDescBox">
+          <h3>${stepTitle}</h3>
+          <p id="stepDescText">${stepDesc}</p>
+        </div>
+
+        <div id="aiExplainBox" class="ai-box" style="display:none;">
+          <div class="ai-label">✨ AI Explanation</div>
+          <div id="aiExplainText"></div>
+        </div>
+
+        <div class="step-counter">
+          ${step === -1 ? 'Press <b>Next Move</b> to begin stepping through the moves.' : `Move ${step + 1} of ${totalSteps}`}
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-primary" onclick="nextStep()" id="btnNext"
+            ${step >= totalSteps - 1 ? 'disabled' : ''}>
+            ${step === -1 ? '▶ Start' : step >= totalSteps - 1 ? '✓ Complete' : '▶ Next Move'}
+          </button>
+          <button class="btn btn-secondary" onclick="prevStep()" id="btnPrev"
+            ${step < 0 ? 'disabled' : ''}>
+            ◀ Back
+          </button>
+          <button class="btn btn-danger" onclick="resetLesson()">↺ Reset</button>
+        </div>
+
+        <div class="tips-box">
+          <h3>How to Spot / Avoid This</h3>
+          <ul>
+            ${lesson.tips.map(t => `<li>${t}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('lessonContent').innerHTML = html;
+
+  // Scroll active move into view
+  if (step >= 0) {
+    const el = document.getElementById('ms-' + step);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+// ============================================================
+//  STEP CONTROLS
+// ============================================================
+
+async function nextStep() {
+  if (!currentLesson) return;
+  if (currentStep < currentLesson.moves.length - 1) {
+    currentStep++;
+    renderLesson();
+
+    // Attempt AI explanation for this move
+    const move = currentLesson.moves[currentStep];
+    const apiKey = getApiKey();
+    if (apiKey && !move.san.startsWith('(') && move.from !== move.to) {
+      const aiBox = document.getElementById('aiExplainBox');
+      const aiText = document.getElementById('aiExplainText');
+      if (aiBox && aiText) {
+        aiBox.style.display = 'block';
+        aiText.innerHTML = '<span class="ai-spinner"></span> Asking AI...';
+        const explanation = await fetchAIExplanation(currentLesson.title, move.san, move.from, move.to);
+        if (explanation) {
+          aiText.textContent = explanation;
+        } else {
+          aiBox.style.display = 'none';
+        }
+      }
+    }
+  }
+}
+
+function prevStep() {
+  if (!currentLesson) return;
+  if (currentStep >= 0) {
+    currentStep--;
+    renderLesson();
+  }
+}
+
+function resetLesson() {
+  if (!currentLesson) return;
+  currentStep = -1;
+  renderLesson();
+}
+
+// ============================================================
+//  SIDEBAR TOGGLE
+// ============================================================
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+document.getElementById('hamburger').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+
+document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (!currentLesson) return;
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextStep(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevStep(); }
+  if (e.key === 'r' || e.key === 'R') resetLesson();
+});
+
+// ============================================================
+//  MODE SWITCHING
+// ============================================================
+
+let currentMode = 'learn';
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('tabLearn').classList.toggle('active', mode === 'learn');
+  document.getElementById('tabEval').classList.toggle('active', mode === 'eval');
+  document.getElementById('learnModeContent').style.display = mode === 'learn' ? '' : 'none';
+  document.getElementById('evalModeContent').style.display = mode === 'eval' ? '' : 'none';
+  document.getElementById('learnSidebar').style.display = mode === 'learn' ? '' : 'none';
+  document.getElementById('evalSidebar').style.display = mode === 'eval' ? '' : 'none';
+
+  if (mode === 'eval' && currentEvalScenario === null) {
+    // Load first scenario
+    loadEvalScenario(0);
+  }
+}
+
+// ============================================================
+//  EVAL MODE
+// ============================================================
+
+// Eval scenarios — mirrored from eval-scenarios.js (inline for browser)
+const EVAL_SCENARIOS = (function() {
+  return [
+    {
+      id: "scholars-mate-defense",
+      name: "Defend Scholar's Mate",
+      description: "White has set up Scholar's Mate with Bc4 + Qh5. You're Black. The queen eyes f7 — don't let it land there for checkmate!",
+      startFEN: "r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3",
+      activeColor: "b",
+      trapMove: { from: "g8", to: "f6" },
+      correctMoves: [
+        { from: "g7", to: "g6" }
+      ],
+      tips: [
+        "After Qh5, g6 pushes the queen away from the deadly f7 diagonal.",
+        "Nf6?? looks like it attacks the queen, but Qxf7# ends the game immediately.",
+        "Always check: is f7 defended? If not, don't play Nf6."
+      ]
+    },
+    {
+      id: "fools-mate-defense",
+      name: "Defend Fool's Mate",
+      description: "White has played 1.f3 — a terrible weakening move. You're Black. Find a safe, solid move that doesn't walk into any tricks.",
+      startFEN: "rnbqkbnr/pppppppp/8/8/8/5P2/PPPPP1PP/RNBQKBNR b KQkq - 0 1",
+      activeColor: "b",
+      trapMove: { from: "e7", to: "e5" },
+      correctMoves: [
+        { from: "d7", to: "d5" },
+        { from: "e7", to: "e6" },
+        { from: "c7", to: "c5" }
+      ],
+      tips: [
+        "d5 is a clean central response that avoids any early tricks.",
+        "After 1.f3, Black is already slightly better — just develop normally.",
+        "The Fool's Mate (Qh4#) only happens if White plays both f3 AND g4."
+      ]
+    },
+    {
+      id: "back-rank-defense",
+      name: "Defend Back Rank Mate",
+      description: "You're Black (king on g8, pawns f7/g7/h7). White's rook on d1 threatens Rd8#. Create an escape square before it's too late!",
+      startFEN: "6k1/5ppp/8/8/8/8/6K1/3R4 b - - 0 1",
+      activeColor: "b",
+      trapMove: { from: "f7", to: "f6" },
+      correctMoves: [
+        { from: "h7", to: "h6" },
+        { from: "g7", to: "g6" },
+        { from: "h7", to: "h5" }
+      ],
+      tips: [
+        "Always create a 'luft' (escape square) with h6 or g6 when your king is behind pawns.",
+        "After h6, if White plays Rd8+, your king escapes to h7.",
+        "Back rank mates are the #1 cause of resigned positions in club chess."
+      ]
+    },
+    {
+      id: "fork-defense",
+      name: "Defend Against Knight Fork",
+      description: "White's knight on d5 threatens Nxc7+, forking your king and rook. You're Black. Remove the dangerous knight before it forks you!",
+      startFEN: "r3k3/pppp1ppp/2n2n2/3Np3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 4",
+      activeColor: "b",
+      trapMove: { from: "e8", to: "d8" },
+      correctMoves: [
+        { from: "f6", to: "d5" }
+      ],
+      tips: [
+        "When a knight threatens a fork, capture it if you can!",
+        "Nxd5 removes the fork piece, winning a pawn and eliminating the threat.",
+        "King moves to d8 don't help — the fork still hits c7 next move."
+      ]
+    },
+    {
+      id: "pin-defense",
+      name: "Break the Pin",
+      description: "Your c3 knight is pinned by Black's Bb4 to your king on e1. You're White. Drive away the bishop before Black can exploit the pin!",
+      startFEN: "rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4",
+      activeColor: "w",
+      trapMove: { from: "c3", to: "e4" },
+      correctMoves: [
+        { from: "a2", to: "a3" }
+      ],
+      tips: [
+        "a3 directly attacks the pinning bishop, forcing it to retreat or be traded.",
+        "Breaking a pin is often better than trying to add defenders to the pinned piece.",
+        "After a3 Bxc3+ dxc3, White gains the bishop pair."
+      ]
+    },
+    {
+      id: "fried-liver-defense",
+      name: "Defend Fried Liver Attack",
+      description: "White just sacrificed a knight on f7! You're Black — your king must move. Find the safest king move to limit White's attack.",
+      startFEN: "r1bqkb1r/ppp2Npp/2n5/3np3/2B1P3/8/PPPP1PPP/RNBQK2R b KQkq - 0 6",
+      activeColor: "b",
+      trapMove: { from: "e8", to: "f7" },
+      correctMoves: [
+        { from: "e8", to: "e7" }
+      ],
+      tips: [
+        "Kxf7 drags your king into the open where White's pieces will hunt it down.",
+        "Ke7 keeps the king slightly more sheltered and avoids immediate Qf3+ attacks.",
+        "The Fried Liver is a dangerous gambit — knowing when NOT to recapture is key."
+      ]
+    }
+  ];
+})();
+
+// Eval state
+let currentEvalScenario = null;  // index
+let evalScenarioIdx = null;
+let evalBoard = null;             // flat 64-element array (from ChessEngine)
+let evalSelectedSquare = null;    // coord string or null
+let evalScenarioResults = {};     // id -> 'correct'|'wrong'|null
+
+function buildEvalSidebar() {
+  const list = document.getElementById('evalScenarioList');
+  let html = '';
+  EVAL_SCENARIOS.forEach((sc, i) => {
+    const result = evalScenarioResults[sc.id] || null;
+    const iconCls = result === 'correct' ? 'correct' : result === 'wrong' ? 'wrong' : '';
+    const icon = result === 'correct' ? '✓' : result === 'wrong' ? '✗' : '?';
+    const activeCls = evalScenarioIdx === i ? ' active' : '';
+    html += `<button class="eval-scenario-btn${activeCls}" onclick="loadEvalScenario(${i})">
+      <span class="eval-status-icon ${iconCls}">${icon}</span>
+      <span>${sc.name}</span>
+    </button>`;
+  });
+  list.innerHTML = html;
+
+  // Update score
+  const solved = Object.values(evalScenarioResults).filter(r => r === 'correct').length;
+  document.getElementById('evalScoreText').textContent = `${solved} / ${EVAL_SCENARIOS.length}`;
+}
+
+function loadEvalScenario(idx) {
+  evalScenarioIdx = idx;
+  currentEvalScenario = EVAL_SCENARIOS[idx];
+  evalSelectedSquare = null;
+
+  // Parse FEN using ChessEngine
+  const { board, activeColor } = ChessEngine.parseFEN(currentEvalScenario.startFEN);
+  evalBoard = board;
+
+  buildEvalSidebar();
+  renderEvalScenario();
+}
+
+function renderEvalScenario() {
+  const sc = currentEvalScenario;
+  if (!sc) return;
+
+  const colorName = sc.activeColor === 'w' ? 'White' : 'Black';
+  const colorCls = sc.activeColor === 'w' ? 'white' : 'black';
+  const result = evalScenarioResults[sc.id] || null;
+
+  let resultHtml = '';
+  if (result === 'correct') {
+    resultHtml = `<div class="eval-result-box correct show">✓ Great defense! You avoided the trap!</div>`;
+  } else if (result === 'wrong') {
+    resultHtml = `<div class="eval-result-box wrong show">✗ You fell for it! That's the blunder! Try again.</div>`;
+  }
+
+  const html = `
+    <div class="eval-main">
+      <div class="eval-header">
+        <span class="eval-color-badge ${colorCls}">${colorName} to move</span>
+        <h2>${sc.name}</h2>
+        <p>${sc.description}</p>
+      </div>
+
+      <div class="eval-board-section">
+        <div class="board-wrap">
+          ${renderEvalBoard(evalBoard, sc.activeColor)}
+        </div>
+
+        <div class="eval-info-panel">
+          ${resultHtml}
+
+          <div class="eval-instruction">
+            <strong>Your task:</strong> You are playing as <strong>${colorName}</strong>. Click a piece to select it, then click a destination square to make your move. Find the defensive move that avoids the trap!
+          </div>
+
+          <div id="evalAiBox" class="ai-box" style="display:none;">
+            <div class="ai-label">✨ AI Explanation</div>
+            <div id="evalAiText"></div>
+          </div>
+
+          <div class="eval-tips-box">
+            <h3>Hints</h3>
+            <ul>
+              ${sc.tips.map(t => `<li>${t}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="eval-reset-btn">
+            <button class="btn btn-secondary" onclick="resetEvalScenario()">↺ Reset Position</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('evalContent').innerHTML = html;
+  attachEvalBoardHandlers();
+}
+
+function renderEvalBoard(flatBoard, activeColor) {
+  let html = '<div class="board-container">';
+  for (let rank = 0; rank < 8; rank++) {
+    html += '<div class="board-row">';
+    html += `<div class="rank-label">${8 - rank}</div>`;
+    for (let file = 0; file < 8; file++) {
+      const sqName = FILES[file] + (8 - rank);
+      const colorCls = (file + rank) % 2 === 0 ? 'light' : 'dark';
+      const idx = rank * 8 + file;
+      const piece = flatBoard[idx];
+      const pieceColor = piece ? piece[0] : null;
+
+      let extraCls = '';
+      if (evalSelectedSquare === sqName) {
+        extraCls = ' selected';
+      } else if (evalSelectedSquare && pieceColor !== activeColor) {
+        // Show potential move targets if we have a selected piece
+        extraCls = ' target-sq';
+      } else if (pieceColor === activeColor) {
+        extraCls = ' selectable';
+      }
+
+      const pieceHtml = piece ? `<span class="piece">${UNICODE_FLAT[piece] || ''}</span>` : '';
+      html += `<div class="${colorCls} square${extraCls}" data-sq="${sqName}" data-eval="true">${pieceHtml}</div>`;
+    }
+    html += '</div>';
+  }
+  html += '<div class="file-labels">';
+  FILES.forEach(f => { html += `<div class="file-label">${f}</div>`; });
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function attachEvalBoardHandlers() {
+  document.querySelectorAll('[data-eval="true"]').forEach(sq => {
+    sq.addEventListener('click', handleEvalSquareClick);
+  });
+}
+
+async function handleEvalSquareClick(e) {
+  const sc = currentEvalScenario;
+  if (!sc) return;
+  const result = evalScenarioResults[sc.id];
+  // Once a result is determined, don't allow more moves until reset
+  if (result === 'correct') return;
+
+  const sqName = e.currentTarget.dataset.sq;
+  const idx = ChessEngine.coordToIndex(sqName);
+  const piece = evalBoard[idx];
+  const activeColor = sc.activeColor;
+
+  if (!evalSelectedSquare) {
+    // Select a piece of the active color
+    if (piece && piece[0] === activeColor) {
+      evalSelectedSquare = sqName;
+      renderEvalBoard_InPlace();
+    }
+    return;
+  }
+
+  // We have a selected square — try to move
+  const fromSq = evalSelectedSquare;
+  const fromPiece = evalBoard[ChessEngine.coordToIndex(fromSq)];
+
+  if (sqName === fromSq) {
+    // Deselect
+    evalSelectedSquare = null;
+    renderEvalBoard_InPlace();
+    return;
+  }
+
+  // If clicking another own piece, re-select
+  if (piece && piece[0] === activeColor) {
+    evalSelectedSquare = sqName;
+    renderEvalBoard_InPlace();
+    return;
+  }
+
+  // Attempt the move
+  evalSelectedSquare = null;
+  const from = fromSq;
+  const to = sqName;
+
+  // Classify the move
+  const isCorrect = sc.correctMoves.some(m => m.from === from && m.to === to);
+  const isTrap = sc.trapMove && sc.trapMove.from === from && sc.trapMove.to === to;
+
+  // Apply move
+  evalBoard = ChessEngine.applyMove(evalBoard, from, to);
+
+  let moveResult = 'other';
+  if (isCorrect) moveResult = 'correct';
+  else if (isTrap) moveResult = 'wrong';
+
+  if (isCorrect || isTrap) {
+    evalScenarioResults[sc.id] = moveResult;
+  }
+
+  renderEvalScenario();
+  buildEvalSidebar();
+
+  // AI explanation
+  const apiKey = getApiKey();
+  if (apiKey && (isCorrect || isTrap)) {
+    const aiBox = document.getElementById('evalAiBox');
+    const aiText = document.getElementById('evalAiText');
+    if (aiBox && aiText) {
+      aiBox.style.display = 'block';
+      aiText.innerHTML = '<span class="ai-spinner"></span> Asking AI...';
+      const moveDesc = `${from}-${to}`;
+      const explanation = await fetchAIEvalExplanation(sc.name, moveDesc, moveResult);
+      if (explanation) {
+        aiText.textContent = explanation;
+      } else {
+        aiBox.style.display = 'none';
+      }
+    }
+  } else if (!isCorrect && !isTrap) {
+    // Show a "hint" message
+    const resultDiv = document.querySelector('.eval-result-box');
+    if (!resultDiv) {
+      const infoPanel = document.querySelector('.eval-info-panel');
+      if (infoPanel) {
+        const hint = document.createElement('div');
+        hint.className = 'eval-result-box hint show';
+        hint.textContent = 'Hmm, that might work but there\'s a better defensive move. Try again!';
+        infoPanel.prepend(hint);
+      }
+    }
+  }
+}
+
+function renderEvalBoard_InPlace() {
+  const sc = currentEvalScenario;
+  if (!sc) return;
+  const boardContainer = document.querySelector('.board-container');
+  if (!boardContainer) return;
+  const parent = boardContainer.closest('.board-wrap');
+  if (!parent) return;
+  parent.innerHTML = renderEvalBoard(evalBoard, sc.activeColor);
+  attachEvalBoardHandlers();
+}
+
+function resetEvalScenario() {
+  if (!currentEvalScenario) return;
+  // Remove result for this scenario so user can retry
+  delete evalScenarioResults[currentEvalScenario.id];
+  loadEvalScenario(evalScenarioIdx);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+
+buildSidebar();
+</script>
+<!-- External modules — loaded after inline script so fallback logic in the inline
+     script runs first if these files are absent. Both use UMD so they set
+     window.ChessEngine and window.EvalScenarios when loaded in a browser. -->
+<script src="chess-engine.js"></script>
+<script src="eval-scenarios.js"></script>
+</body>
+</html>

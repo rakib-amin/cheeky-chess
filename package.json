@@ -1,0 +1,11 @@
+{
+  "name": "sneaky-chess",
+  "version": "1.0.0",
+  "description": "Interactive chess tricks and tactics trainer",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}
