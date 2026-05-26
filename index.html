@@ -1223,7 +1223,7 @@ const LESSONS = [
     category: 'trap',
     title: "Budapest Gambit Trap",
     badge: "Counterpunch Gambit",
-    desc: "Black gives up a pawn on move 2 and gets a ferocious counterattack. White tries to hold the extra pawn with natural-looking moves and walks straight into a piece trap. The knight goes to a square it can never escape from.",
+    desc: "Black gives up a pawn on move 2 and gets a ferocious counterattack. White tries to hold the extra pawn with natural-looking moves and walks straight into a piece trap. The knight finds a fork square that attacks three of White's pieces at once.",
     moves: [
       { from:'d2', to:'d4', san:'d4',   side:'w', desc:"White opens with d4." },
       { from:'g8', to:'f6', san:'Nf6',  side:'b', desc:"Black plays Nf6, a flexible response." },
@@ -1231,12 +1231,12 @@ const LESSONS = [
       { from:'e7', to:'e5', san:'e5',   side:'b', desc:"THE BUDAPEST GAMBIT — Black sacrifices a pawn immediately for rapid development and activity!", highlight:['e5'], highlightType:'good' },
       { from:'d4', to:'e5', san:'dxe5', side:'w', desc:"White accepts — taking the pawn. This is the challenge." },
       { from:'f6', to:'g4', san:'Ng4',  side:'b', desc:"Black attacks the e5 pawn immediately with the knight." },
-      { from:'e2', to:'e4', san:'e4?',  side:'w', desc:"White props up the e5 pawn by advancing the e2 pawn — but this is the trap! White should play Nf3 instead.", highlight:['e4','g4'], highlightType:'trap' },
-      { from:'d8', to:'e7', san:'Qe7!', side:'b', desc:"Black plays Qe7, attacking the advanced pawn AND setting up a pin against the king!", highlight:['e7','f4','e1'], highlightType:'good' },
-      { from:'f2', to:'f3', san:'f3?',  side:'w', desc:"White tries to defend, but this creates more weaknesses around the king.", highlight:['f3'], highlightType:'trap' },
-      { from:'g4', to:'h4', san:'Nh4!', side:'b', desc:"The knight goes to h4 — the TRAP SQUARE. From here, the knight attacks f3 and g2 and cannot be attacked by any pawn!", highlight:['h4','f3','g2'], highlightType:'trap' },
-      { from:'g2', to:'g3', san:'g3',   side:'w', desc:"White tries to kick the knight but..." },
-      { from:'h4', to:'f3', san:'Nxf3+',side:'b', desc:"FORK! Knight takes f3 with check, forking king and rook!", highlight:['f3','e1','h1'], highlightType:'trap' }
+      { from:'e2', to:'e4', san:'e4?',  side:'w', desc:"White plays e4 hoping to fortify the center — but e4 doesn't actually defend the e5 pawn (the g4 knight still attacks it!), and now e4 becomes a target too. Nf3 was safer.", highlight:['e4','g4','e5'], highlightType:'trap' },
+      { from:'d8', to:'e7', san:'Qe7!', side:'b', desc:"Black plays Qe7, renewing the threat to win e5 AND pointing the queen down the e-file toward White's king. The e4–e5 pawn chain is under serious pressure.", highlight:['e7','e5','e4','e1'], highlightType:'good' },
+      { from:'f2', to:'f3', san:'f3?',  side:'w', desc:"White tries to chase the knight away — but this is the losing move. It walks straight into a devastating fork.", highlight:['f3'], highlightType:'trap' },
+      { from:'g4', to:'e3', san:'Ne3!!', side:'b', desc:"THE FORK SQUARE! The knight leaps to e3, attacking three targets simultaneously: the queen on d1, the bishop on f1, AND the c4 pawn. White cannot save everything.", highlight:['e3','d1','f1','c4'], highlightType:'trap' },
+      { from:'d1', to:'d2', san:'Qd2',  side:'w', desc:"White saves the queen — but the bishop on f1 is now undefended and lost." },
+      { from:'e3', to:'f1', san:'Nxf1!', side:'b', desc:"The knight takes the bishop! Black has won a piece. The Budapest Gambit's piece-winning combination is complete.", highlight:['f1'], highlightType:'good' }
     ],
     board: startBoard(),
     tips: [
@@ -1284,7 +1284,7 @@ const LESSONS = [
     moves: [
       { from:'b5', to:'b5', san:'(position set)', side:'w', desc:"Study the position. The White bishop on b5 PINS the Black knight on c6. The knight cannot legally move because it would expose the Black king on e8 to check!", highlight:['b5','c6','e8'], highlightType:'trap' },
       { from:'d1', to:'d5', san:'Qd5!', side:'w', desc:"White exploits the pin! The queen attacks the pinned knight on c6. Black cannot defend with the knight (it's pinned!)", highlight:['d5','c6'], highlightType:'trap' },
-      { from:'d8', to:'d7', san:'Qd7',  side:'b', desc:"Black tries to defend the knight with the queen, but..." },
+      { from:'d8', to:'b6', san:'Qb6',  side:'b', desc:"Black tries to defend the knight by bringing the queen to b6, covering c6 along the rank. But it's still not enough..." },
       { from:'d5', to:'c6', san:'Qxc6', side:'w', desc:"White captures the pinned knight! Black can recapture with Qxc6, but White has won a knight for free — the pin exploited a piece that couldn't move legally.", highlight:['c6'], highlightType:'good' }
     ],
     boardSetup: () => {
@@ -1295,6 +1295,7 @@ const LESSONS = [
       b[3][1] = 'B'; // b5
       b[7][4] = 'K'; // e1
       b[7][3] = 'Q'; // d1
+      b[1][3] = 'p'; // d7 pawn (blocks Black's queen from capturing Qxd5)
       b[1][4] = 'p'; // e7 pawn
       return b;
     },
@@ -1348,7 +1349,7 @@ const LESSONS = [
       const b = emptyBoard();
       b[1][6] = 'r'; // g7 rook (black)
       b[0][3] = 'q'; // d8 queen (black)
-      b[0][4] = 'k'; // e8 king
+      b[0][6] = 'k'; // g8 king (castled — keeps e8 free for the queen's escape)
       b[4][3] = 'N'; // d4 knight (white) — on the b2-g7 diagonal, blocking the bishop
       b[6][1] = 'B'; // b2 bishop (white)
       b[7][4] = 'K'; // e1 king
@@ -1399,16 +1400,16 @@ const LESSONS = [
     badge: "Suffocated by Your Own Pieces",
     desc: "A knight delivers checkmate to a king surrounded by its own pieces. The king literally suffocates. The classic Philidor's legacy pattern uses a queen sacrifice to lure the rook to d8, then the knight dances the king into a corner — where a lone knight delivers the final blow.",
     moves: [
-      { from:'g5', to:'g5', san:'(position set)', side:'w', desc:"The classic Smothered Mate setup. Black: king g8 (castled), pawns f7/g7/h7 sealing it in, rook f8, rook h8, queen d8. White: knight g5, queen d1. Those cozy-looking pawns are about to become a prison.", highlight:['g8','f7','g7','h7'], highlightType:'trap' },
+      { from:'g5', to:'g5', san:'(position set)', side:'w', desc:"The classic Smothered Mate setup. Black: king g8 (castled), pawns f7/g7/h7 sealing it in, rook f8, queen d8. White: knight g5, queen d1. Those cozy-looking pawns are about to become a prison.", highlight:['g8','f7','g7','h7'], highlightType:'trap' },
       { from:'g5', to:'e6', san:'Ne6!', side:'w', desc:"The knight forks the queen on d8 AND the rook on f8 in one move! Black must lose material — and in doing so, the king gets nudged toward the corner.", highlight:['e6','d8','f8'], highlightType:'trap' },
-      { from:'g8', to:'h8', san:'Kh8',  side:'b', desc:"King runs to the corner. The only legal escape from the check." },
+      { from:'g8', to:'h8', san:'Kh8',  side:'b', desc:"Black's queen and rook are both hanging! The king steps to h8, conceding material to the fork." },
       { from:'d1', to:'d8', san:'Qxd8+',side:'w', desc:"THE QUEEN SACRIFICE! White gives up their queen to take Black's queen with check. This looks insane, but it forces the rook to recapture — which completes the smothering prison.", highlight:['d8','f8'], highlightType:'trap' },
-      { from:'f8', to:'d8', san:'Rxd8', side:'b', desc:"Black must recapture. The rook goes to d8. Now look at the Black king on h8 — it's completely boxed in by its own rook (h8) and pawns (g7, h7). The cage is sealed." },
+      { from:'f8', to:'d8', san:'Rxd8', side:'b', desc:"Black must recapture. The rook moves to d8. The Black king on h8 is now boxed in by the rook on d8, the g7/h7 pawns, and the edge of the board. The cage is tightening." },
       { from:'e6', to:'f7', san:'Nf7+', side:'w', desc:"CHECK again! The knight checks from f7. The king is trapped — g8 is occupied by... oh wait, after Rxd8 the rook moved. King can go to g8.", highlight:['f7','h8'], highlightType:'trap' },
       { from:'h8', to:'g8', san:'Kg8',  side:'b', desc:"King retreats to g8. But now g7 pawn, h7 pawn and the rook on d8 are blocking. The king's prison is almost complete." },
       { from:'f7', to:'h6', san:'Nh6+', side:'w', desc:"CHECK from h6! The knight bounces, keeping constant pressure on the king, forcing it back to the corner.", highlight:['h6','g8'], highlightType:'trap' },
       { from:'g8', to:'h8', san:'Kh8',  side:'b', desc:"King is forced back to h8. The corner of doom." },
-      { from:'h6', to:'g8', san:'Ng8!!',side:'w', desc:"THE BRILLIANT SACRIFICE! The knight boldly goes to g8 — which is defended by the rook on h8! This forces the king to capture. It looks like White is blundering the last attacking piece.", highlight:['g8','h8'], highlightType:'trap' },
+      { from:'h6', to:'g8', san:'Ng8!!',side:'w', desc:"THE BRILLIANT SACRIFICE! The knight boldly goes to g8 — the only square the king on h8 can capture it from! This forces the king to step to g8, which is the final trap. It looks like White is blundering the last attacking piece.", highlight:['g8','h8'], highlightType:'trap' },
       { from:'h8', to:'g8', san:'Kxg8', side:'b', desc:"King captures the knight on g8 — forced. There's no other legal move. Now the king is on g8... surrounded by its own pawns on f7, g7, h7, with the rook still on d8." },
       { from:'f7', to:'f7', san:'(Nf7# next)', side:'w', desc:"There's no White knight left on the board... but wait — White has a SECOND knight! Or in the original version: this sequence typically ends with a second knight appearing. The key takeaway: the king on g8 is completely smothered by f7, g7, h7 pawns — ANY knight on f5 or e6 can deliver #.", highlight:['g8','f7','g7','h7'], highlightType:'trap' }
     ],
@@ -1418,7 +1419,6 @@ const LESSONS = [
       // Black: king g8, rook f8, rook h8, pawns f7 g7 h7, queen d8
       b[0][6] = 'k'; // g8
       b[0][5] = 'r'; // f8
-      b[0][7] = 'r'; // h8
       b[1][5] = 'p'; // f7
       b[1][6] = 'p'; // g7
       b[1][7] = 'p'; // h7
@@ -1444,7 +1444,7 @@ const LESSONS = [
     badge: "Bishop + Rook Poetry",
     desc: "Named after the famous Opera Game by Paul Morphy (1858), this elegant mating pattern uses a bishop and rook together to checkmate the king on the back rank. The bishop covers escape squares while the rook delivers the final blow.",
     moves: [
-      { from:'h1', to:'h1', san:'(position set)', side:'w', desc:"The Opera Mate setup: White has bishop on b2 and rook ready. Black's king is on g8, hemmed in. The bishop on b2 controls the long diagonal through g7.", highlight:['b2','g7','g8'], highlightType:'good' },
+      { from:'h1', to:'h1', san:'(position set)', side:'w', desc:"The Opera Mate setup: White has bishop on b2 and rook on d1. Black's king is on g8, boxed in by pawns on f7/g7/h7 and a rook on h8. The bishop controls the long diagonal through g7.", highlight:['b2','g7','g8'], highlightType:'good' },
       { from:'d1', to:'d8', san:'Rd8#', side:'w', desc:"CHECKMATE! The rook delivers mate on d8. The bishop on b2 controls g7, preventing the king from escaping. The rook covers the entire d-file. Beautiful and brutal.", highlight:['d8','b2','g7','g8'], highlightType:'trap' }
     ],
     boardSetup: () => {
@@ -1456,8 +1456,7 @@ const LESSONS = [
       b[6][1] = 'B'; // b2
       b[7][3] = 'R'; // d1
       b[7][6] = 'K'; // g1
-      b[0][5] = 'r'; // f8 black rook
-      b[0][7] = 'r'; // h8 black rook (both rooks so no castling confusion)
+      b[0][7] = 'r'; // h8 black rook
       return b;
     },
     tips: [
